@@ -641,10 +641,74 @@ print("Date Format")
 spark.sql("select id,tdate,from_unixtime(unix_timestamp(tdate,'MM-dd-yyyy'),'yyyy-MM-dd') "
           "as con_date from df").show()
 """
+#DSL (Domain Specific Language)
+#Step 1: Read the data
+data = sc.textFile("dt.txt")
+
+# Step 2: Split data ',' delimiter
+split_data = data.map(lambda x : x.split(','))
+#Step 3: define columns using namedtuple
+from collections import namedtuple
+Columns = namedtuple(typename='Columns',
+                     field_names=['Id','tDate','Amount', 'Category','Product','Mode']
+                     )
+#Step 4: Impose columns to data splits using index
+final_data = split_data.map(lambda x: Columns(x[0],x[1],x[2],x[3],x[4],x[5]))
+data= final_data.toDF()
+data.show()
+"""
+df1 = data.select('tDate','Amount')
+df1.show()
+df2 = data.drop('tDate','Amount')
+df2.show()
+
+#Single column filter
+df3 = data.filter("Category = 'Exercise'")
+
+# Multi column filter
+df4 = data.filter("Category = 'Exercise' and Mode = 'cash'")
+df4.show()
+
+df5 =data.filter("Category = 'Exercise' or Mode= 'cas'")
+df5.show()
 
 
+#Multi Value Filter
+df6 =data.filter("Category in ('Exercise','Gymnastics')")
+df6.show()
+
+#LIKE
+df7 = data.filter("Product like '%Gymnastics%'")
+df7.show()
+
+#is null
+df8 =data.filter("Product is null")
+df8.show()
+
+#is not null
+df9 =data.filter("Product is not null")
+df9.show()
+
+# not equal
+df9 =data.filter("Category != 'Exercise'")
+df9.show()
 
 
+#Upper
+df10 =data.selectExpr('Category','upper(Category)')
+df10.show()
+"""
+# Expressions
+df10 =data.selectExpr(
+    'cast(Id as int) as Cast_Id',
+    'split(tDate,"-")[2] as Year',
+    'Amount + 1000',
+    'upper(Category) as CATEGORY',
+    'concat(Product,"~Zeyo")',
+    'Mode',
+    'case when Mode="cash" then 1 else 0 end as Status'
+)
+df10.show()
 
 
 
