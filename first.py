@@ -641,6 +641,7 @@ print("Date Format")
 spark.sql("select id,tdate,from_unixtime(unix_timestamp(tdate,'MM-dd-yyyy'),'yyyy-MM-dd') "
           "as con_date from df").show()
 """
+"""
 #DSL (Domain Specific Language)
 #Step 1: Read the data
 data = sc.textFile("dt.txt")
@@ -656,6 +657,7 @@ Columns = namedtuple(typename='Columns',
 final_data = split_data.map(lambda x: Columns(x[0],x[1],x[2],x[3],x[4],x[5]))
 data= final_data.toDF()
 data.show()
+"""
 """
 df1 = data.select('tDate','Amount')
 df1.show()
@@ -697,7 +699,7 @@ df9.show()
 #Upper
 df10 =data.selectExpr('Category','upper(Category)')
 df10.show()
-"""
+
 # Expressions
 df10 =data.selectExpr(
     'cast(Id as int) as Cast_Id',
@@ -711,17 +713,149 @@ df10 =data.selectExpr(
 df10.show()
 
 
+#With Column
+withexpr = (data
+            .withColumn('Id',expr('cast(Id as int)'))
+            .withColumn('tDate',expr('split(tDate,"-")[2]'))
+            .withColumnRenamed('tDate','Year')
+            .withColumn('Category', expr('upper(Category)'))
+            .withColumn('Amount', expr('Amount+1000'))
+            .withColumn('Product', expr('concat(Product,"~Zeyo")'))
+            .withColumn('Status',expr('case when Mode="cash" then 1 else 0 end'))
+            )
+withexpr.show()
+"""
+# Spark Joins
+# SQL GET READY CODE
+
+data = [
+    (0, "06-26-2011", 300.4, "Exercise", "GymnasticsPro", "cash"),
+    (1, "05-26-2011", 200.0, "Exercise Band", "Weightlifting", "credit"),
+    (2, "06-01-2011", 300.4, "Exercise", "Gymnastics Pro", "cash"),
+    (3, "06-05-2011", 100.0, "Gymnastics", "Rings", "credit"),
+    (4, "12-17-2011", 300.0, "Team Sports", "Field", "cash"),
+    (5, "02-14-2011", 200.0, "Gymnastics", None, "cash"),
+    (6, "06-05-2011", 100.0, "Exercise", "Rings", "credit"),
+    (7, "12-17-2011", 300.0, "Team Sports", "Field", "cash"),
+    (8, "02-14-2011", 200.0, "Gymnastics", None, "cash")
+]
+
+df = spark.createDataFrame(data, ["id", "tdate", "amount", "category", "product", "spendby"])
+df.show()
+
+
+
+
+data2 = [
+    (4, "12-17-2011", 300.0, "Team Sports", "Field", "cash"),
+    (5, "02-14-2011", 200.0, "Gymnastics", None, "cash"),
+    (6, "02-14-2011", 200.0, "Winter", None, "cash"),
+    (7, "02-14-2011", 200.0, "Winter", None, "cash")
+]
+
+df1 = spark.createDataFrame(data2, ["id", "tdate", "amount", "category", "product", "spendby"])
+df1.show()
 
 
 
 
 
 
+data4 = [
+    (1, "raj"),
+    (2, "ravi"),
+    (3, "sai"),
+    (5, "rani")
+]
 
 
 
+cust = spark.createDataFrame(data4, ["id", "name"])
+cust.show()
+
+data3 = [
+    (1, "mouse"),
+    (3, "mobile"),
+    (7, "laptop")
+]
+
+prod = spark.createDataFrame(data3, ["id", "product"])
+prod.show()
+
+df.createOrReplaceTempView("df")
+df1.createOrReplaceTempView("df1")
+cust.createOrReplaceTempView("cust")
+prod.createOrReplaceTempView("prod")
 
 
+print('SQL Get Ready code completed')
+<<<<<<< HEAD
+"""
+=======
+>>>>>>> github/master
+
+#inner join
+print("====================")
+print("Inner Join")
+inner_join = cust.join(prod,['id'],'inner')
+inner_join.show()
+
+<<<<<<< HEAD
+#Left Join
+print("=====================")
+print("Left Join")
+left_join = cust.join(prod,['id'],'left')
+left_join.show()
+
+#Right Join
+print("=====================")
+print("Right Join")
+right_join = cust.join(prod,['id'],'right')
+right_join.show()
+
+#Full Join
+print("=====================")
+print("Full Join")
+full_join = cust.join(prod,['id'],'full')
+full_join.show()
+"""
+data5 = [
+    (1, "mouse"),
+    (3, "mobile"),
+    (7, "laptop")
+]
+
+prod_1 = spark.createDataFrame(data5, ["cid", "product"])
+prod_1.show()
+"""
+#scenario 1: column names are different
+joined_df = cust.join(prod_1,cust['id']==prod_1['cid'],'inner')
+joined_df.show()
+#output we have both the columns 'id' and 'cid'
+#best practice is, based on the requirement drop either of the column
+joined_df = cust.join(prod_1,cust['id']==prod_1['cid'],'inner').drop('cid')
+joined_df.show()
+
+#scenario 2 of full join
+full_df = cust.join(prod_1,cust['id']==prod_1['cid'],'full')
+full_df.show()
+#which column to drop ??? replace null in id column with cid value and drop the cid column
+#option 1: using case when
+final_df1 =(full_df
+            .withColumn('id',expr('case when id is null then cid else id end'))
+            .drop('cid')
+)
+final_df1.show()
+#option 2: using coalesce
+final_df2 = (full_df
+             .withColumn('id',expr('coalesce(id,cid)'))
+             .drop('cid')
+             )
+final_df2.show()
+"""
+#left anti join
+anti_join = cust.join(prod,['id'],'leftanti')
+anti_join.show()
 
 
 
