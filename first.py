@@ -789,10 +789,10 @@ prod.createOrReplaceTempView("prod")
 
 
 print('SQL Get Ready code completed')
-<<<<<<< HEAD
+
 """
 =======
->>>>>>> github/master
+
 
 #inner join
 print("====================")
@@ -800,7 +800,7 @@ print("Inner Join")
 inner_join = cust.join(prod,['id'],'inner')
 inner_join.show()
 
-<<<<<<< HEAD
+
 #Left Join
 print("=====================")
 print("Left Join")
@@ -852,16 +852,46 @@ final_df2 = (full_df
              .drop('cid')
              )
 final_df2.show()
-"""
+
 #left anti join
 anti_join = cust.join(prod,['id'],'leftanti')
 anti_join.show()
 
+#cross or cartesian join
+cross_join = cust.crossJoin(prod)
+cross_join.show()
+"""
+'''
 
+#Scenario
+print("Full Join")
+full_join = cust.join(prod,['id'],'full')
+full_join.show()
 
+commdf= full_join.withColumn('comment',
+                             expr('case when name is null then 0 when product is null then 0 else 1 end'))
+commdf.show()
 
+fil_df = commdf.filter('comment!=1')
+fil_df.show()
 
+procdf = full_join.withColumn('comment',expr("""
+case 
+when name is null then 'new in source'
+when product is null then 'new in target'
+else 'mismatched' end
+"""))
+procdf.show()
 
+procdf = full_join.withColumn('comment',expr("""
+case 
+when name is null then 'new in source'
+when product is null then 'new in target'
+else 'mismatched' end
+""")).drop('name','product')
+procdf.show()
+
+'''
 
 
 
