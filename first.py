@@ -725,6 +725,7 @@ withexpr = (data
             )
 withexpr.show()
 """
+"""
 # Spark Joins
 # SQL GET READY CODE
 
@@ -789,7 +790,7 @@ prod.createOrReplaceTempView("prod")
 
 
 print('SQL Get Ready code completed')
-
+"""
 """
 =======
 
@@ -818,7 +819,7 @@ print("=====================")
 print("Full Join")
 full_join = cust.join(prod,['id'],'full')
 full_join.show()
-"""
+
 data5 = [
     (1, "mouse"),
     (3, "mobile"),
@@ -827,6 +828,7 @@ data5 = [
 
 prod_1 = spark.createDataFrame(data5, ["cid", "product"])
 prod_1.show()
+"""
 """
 #scenario 1: column names are different
 joined_df = cust.join(prod_1,cust['id']==prod_1['cid'],'inner')
@@ -892,6 +894,134 @@ else 'mismatched' end
 procdf.show()
 
 '''
+
+#Aggregation
+data = [
+    ('sai', 'chennai','40'),
+    ('zeyo', 'hyderabad','10'),
+    ('sai', 'hyderabad','20'),
+    ('zeyo', 'chennai','20'),
+    ('sai', 'chennai','10'),
+    ('zeyo', 'hyderabad','10')
+]
+
+sales = spark.createDataFrame(data, ['name','city','amount'])
+print("Sales Data for Aggregation")
+sales.show()
+"""
+#SUM
+sales_by_name = sales.groupBy('name').agg(sum('amount').alias('Total'))
+print('Total sale of Individual')
+sales_by_name.show()
+
+#Count
+sales_by_name = sales.groupBy('name').agg(sum('amount').alias('Total'),
+                                          count('amount').alias('Count'))
+print('Total sale and count of Individual')
+sales_by_name.show()
+
+# Collect the each sale
+sales_by_name = sales.groupBy('name').agg(sum('amount').alias('Total'),
+                                          count('amount').alias('Count'),
+                                          collect_list('amount').alias('Sales_Done'))
+print('Total sale,count, Sales Done by Individual')
+sales_by_name.show()
+
+# collect the each sale but remove the duplicates
+sales_by_name = sales.groupBy('name').agg(sum('amount').alias('Total'),
+                                          count('amount').alias('Count'),
+                                          collect_list('amount').alias('Sales_Done'),
+                                          collect_set('amount').alias('Distinct Sales'))
+                                          # Interview Question collect_list vs collect_set
+print('Total Sales, Count, Sales Done and Distinct Sales by Individual')
+sales_by_name.show()
+
+# Include city
+sales_by_name = sales.groupBy('name','city').agg(sum('amount').alias('Total'),
+                                          count('amount').alias('Count'),
+                                          collect_list('amount').alias('Sales_Done'),
+                                          collect_set('amount').alias('Distinct Sales'))
+# Interview Question collect_list vs collect_set
+print('Total Sales, Count, Sales Done and Distinct Sales by Individual and City')
+sales_by_name.show()
+"""
+
+"""
+#Scenario
+data = [
+    (1, "Alice", 25, "F"),
+    (2, "Bob", 40, "M"),
+    (3, "Raj", 46, "M"),
+    (4, "Sekar", 66, "M"),
+    (5, "Jhon", 47, "M"),
+    (6, "Timoty", 28, "M"),
+    (7, "Brad", 90, "M"),
+    (8, "Rita", 34, "F")
+]
+
+# Column names
+columns = ["customer_id", "name", "age", "gender"]
+
+# Create DataFrame
+df = spark.createDataFrame(data, columns)
+
+# Show DataFrame
+df.show()
+
+Age_df=df.withColumn('age_band',
+    expr(
+        '''
+        case 
+        when age>=19 and age <=35 then '19-35'
+        when age>=36 and age <= 50 then '36-50'
+        when age >= 50 then '50+'
+        else 'NA'
+        end
+        '''
+    )
+)
+Age_df.show()
+
+final_df = Age_df.groupBy('age_band').agg(count('age_band').alias('count'))
+final_df.show()
+"""
+"""
+# Scenario
+# Data
+data = [
+    ("2020-05-30", "Headphone"),
+    ("2020-06-01", "Pencil"),
+    ("2020-06-02", "Mask"),
+    ("2020-05-30", "Basketball"),
+    ("2020-06-01", "Book"),
+    ("2020-06-02", "Mask"),
+    ("2020-05-30", "T-Shirt")
+]
+
+# Column names
+columns = ["date", "product"]
+
+# Create DataFrame
+df = spark.createDataFrame(data, columns)
+
+df.show()
+
+final_df = df.dropDuplicates().groupBy('date').agg(collect_set('product').alias('Products'),
+                                  count('product').alias('null_sell'))
+final_df.show()
+"""
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
