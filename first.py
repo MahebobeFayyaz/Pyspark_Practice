@@ -1010,12 +1010,59 @@ final_df = df.dropDuplicates().groupBy('date').agg(collect_set('product').alias(
                                   count('product').alias('null_sell'))
 final_df.show()
 """
+#Window Function
 
 
+data = [
+    ("DEPT1", 1000),
+    ("DEPT1", 700),
+    ("DEPT1", 500),
+    ("DEPT2", 400),
+    ("DEPT2", 200),
+    ("DEPT3", 500),
+    ("DEPT3", 200)
+]
 
+# Column names
+columns = ["department", "salary"]
 
+# Create DataFrame
+df = spark.createDataFrame(data, columns)
 
+# Show DataFrame
+df.show()
+"""
+"""
+#Find the Nth highest salary
+#SQL
+df.createOrReplaceTempView('dept')
+spark.sql("Select department, salary from (select department, salary, dense_rank() "
+          "OVER(partition by department order by salary desc) as dense_rank "
+          "from dept)"
+          "where dense_rank =1").show()
+#pyspark
+from pyspark.sql.window import Window
+#step by step
+deptwindow = Window.partitionBy('department').orderBy(col('salary').desc())
+denserankdf = df.withColumn('rnk',dense_rank().over(deptwindow))
+denserankdf.show()
+filter_df = denserankdf.filter('rnk = 2')
+filter_df.show()
+finaldf= filter_df.drop('rnk')
+finaldf.show()
+#Single Query
+finaldf = (df.withColumn('rnk',
+                        dense_rank().over(Window.partitionBy('department').orderBy(col('salary').desc())))
+           .filter('rnk = 2')
+           .drop('rnk'))
+finaldf.show()
 
+#without window function
+final_df = (df.groupBy('department').agg(sort_array(collect_set('salary'),asc=False).alias('List'))
+            .withColumn('Second Highest', element_at(col('List'),2))
+            .drop('List')
+            )
+final_df.show()
 
 
 
