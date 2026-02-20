@@ -894,7 +894,7 @@ else 'mismatched' end
 procdf.show()
 
 '''
-
+"""
 #Aggregation
 data = [
     ('sai', 'chennai','40'),
@@ -908,6 +908,7 @@ data = [
 sales = spark.createDataFrame(data, ['name','city','amount'])
 print("Sales Data for Aggregation")
 sales.show()
+"""
 """
 #SUM
 sales_by_name = sales.groupBy('name').agg(sum('amount').alias('Total'))
@@ -1012,7 +1013,7 @@ final_df.show()
 """
 #Window Function
 
-
+"""
 data = [
     ("DEPT1", 1000),
     ("DEPT1", 700),
@@ -1033,6 +1034,7 @@ df = spark.createDataFrame(data, columns)
 df.show()
 """
 """
+
 #Find the Nth highest salary
 #SQL
 df.createOrReplaceTempView('dept')
@@ -1063,10 +1065,30 @@ final_df = (df.groupBy('department').agg(sort_array(collect_set('salary'),asc=Fa
             .drop('List')
             )
 final_df.show()
+"""
 
+#Complex data
+data = """
+{
+    "id": 1,
+    "trainer": "sai",
+    "zeyoAddress": {
+        "permanentAddress": "Hyderabad",
+        "temporaryAddress": "Chennai"
+    }
+}
+"""
+df= spark.read.option('multiline','true').json(sc.parallelize([data]))
+df.show()
+df.printSchema()
 
-
-
+flat_df = df.selectExpr(
+   'id',
+    'trainer',
+    'zeyoAddress.permanentAddress',
+    'zeyoAddress.temporaryAddress'
+)
+flat_df.show()
 
 
 
